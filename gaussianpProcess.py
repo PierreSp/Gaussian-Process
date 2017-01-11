@@ -55,7 +55,7 @@ class GaussianProcess:
         x1 = rs.multivariate_normal(mean, np.exp(cov), 10).T
         plt.plot(dp, x1)
 
-    def Gaussianpoints(self, X, fun, minval=0, maxval=4, nsample = 100,
+    def Gaussianpoints(self, X, fun, minval=0, maxval=4, nsample=100,
                        l=0.6, sigma=1):
 
         f = fun(X)
@@ -63,7 +63,6 @@ class GaussianProcess:
         for i in range(X.size):
             for j in range(X.size):
                 K[i, j] = (sigma**2) * np.exp(-1*(X[i]-X[j])**2 / (2*l**2))
-
 
         Xs = np.linspace(minval, maxval, nsample)
         Kss = np.empty([Xs.size, Xs.size])
@@ -76,7 +75,7 @@ class GaussianProcess:
             for j in range(Xs.size):
                 Ks[i, j] = (sigma**2) * np.exp(-1*(X[i]-Xs[j])**2 / (2*l**2))
 
-        mu = 0 + Ks.transpose().dot(np.linalg.inv(K)).dot(f)
+        mu = Ks.transpose().dot(np.linalg.inv(K)).dot(f)
         Kov = Kss - Ks.transpose().dot(np.linalg.inv(K)).dot(Ks)
 
         rs = np.random.RandomState(5)
