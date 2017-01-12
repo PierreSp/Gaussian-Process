@@ -36,10 +36,37 @@ class GaussianProcess():
         self._calculated = 0
 
     def add_noise(self, noise):
+        """Adds noise to the model
+
+        Note:
+            Affects only K
+
+        Args:
+            noise: Float which determins the amount of added noise
+
+        Returns:
+            None, only changes the diagonals of self.K
+
+        """
         self.noise_level = noise
         self.K = self.K + (noise * np.identity(self.X.size))
 
     def _calc_kernel(self, x1, x2):
+        """Calculates the kernel
+
+        Note:
+            Only works for quadratic K, as symmetry is used.
+            Using the exp kernel function with the parameters
+            self.sigma and self.l
+
+        Args:
+            x1: values of the x-values of the first set
+            x2: values of the x-values of the second set
+
+        Returns:
+            K: Kernel matrix
+
+        """
         K = np.zeros([x1.size, x2.size])
         for i in range(x1.size):
             for j in range(i, x2.size):
@@ -49,6 +76,20 @@ class GaussianProcess():
         return K
 
     def _calc_kernel_nonquad(self, x1, x2):
+        """Calculates the kernel
+
+        Note:
+            Using the exp kernel function with the parameters
+            self.sigma and self.l
+
+        Args:
+            x1: values of the x-values of the first set
+            x2: values of the x-values of the second set
+
+        Returns:
+            K: Kernel matrix
+
+        """
         K = np.zeros([x1.size, x2.size])
         for i in range(x1.size):
             for j in range(x2.size):
@@ -57,6 +98,18 @@ class GaussianProcess():
         return K
 
     def calc_samples(self, nsamples=10):
+        """Calculates samples from a multivariate gaussian
+
+        Note:
+            This function uses self.mean and self.cov for the sampling
+
+        Args:
+            nsamples: number of different samples to draw
+
+        Returns:
+            rs: samples from the gaussian distribution
+
+        """
         if self._calculated > 0:
             rs = np.random.RandomState(5)
             return rs.multivariate_normal(self.mean, self.cov, nsamples).T
@@ -88,9 +141,8 @@ class GaussianProcess():
             if plot_variance:
                 var = np.diagonal(self.cov)
                 # Plot 96% confidence
-                plt.fill_between(self.X_s, self.mean+1.96*np.var, self.mean-1.96*var,
-                    alpha=0.2, edgecolor='#191919', facecolor='#737373',
-                    linewidth=4, linestyle='dashdot', antialiased=True)
+                plt.fill_between(self.X_s, self.mean+1.96*np.sqrt(var), self.mean-1.96*np.sqrt(var),
+                    alpha=0.2, edgecolor='#191919', facecolor='#737373', antialiased=True)
             return(plt.show())
         elif (self._calculated == 2):
             yplot = self.calc_samples(nsamples)
@@ -104,9 +156,9 @@ class GaussianProcess():
 
 
 if __name__ == '__main__':
-    X = np.random.uniform(0, 2, 4)
-    fun = lambda x: np.sin(x)**2
+    X = np.random.uniform(0, 2, 5)
+    fun = lambda x: np.sin(x*np.pi)**2
     Xs = np.linspace(0, 2, 200)
-    GP = GaussianProcess(Xs, X, l=0.)
+    GP = GaussianProcess(Xs, X, l=0.6)
     GP.cond_gaussian(fun)
     GP.plot(10, plot_variance=True)
