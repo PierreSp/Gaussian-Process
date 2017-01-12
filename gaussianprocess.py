@@ -33,7 +33,7 @@ class GaussianProcess():
         self.X_s = X_s
 
         self.fun = lambda x: x
-        self.__calculated = 0
+        self._calculated = 0
 
     def add_noise(self, noise):
         self.noise_level = noise
@@ -57,7 +57,7 @@ class GaussianProcess():
         return K
 
     def calc_samples(self, nsamples=10):
-        if self.__calculated > 0:
+        if self._calculated > 0:
             rs = np.random.RandomState(5)
             return rs.multivariate_normal(self.mean, self.cov, nsamples).T
         else:
@@ -69,34 +69,44 @@ class GaussianProcess():
         self.K = self._calc_kernel(self.X, self.X)
         self.Ks = self._calc_kernel_nonquad(X, self.X_s)
         self.Kss = self._calc_kernel(self.X_s, self.X_s)
-        self.mean = self.Ks.transpose().dot(np.linalg.inv(self.K)).dot(f)
+        self.mean = self.Ks.transpose().dot(np.linalg.inv(self.K)).dot(
+            fun(self.X))
         self.cov = self.Kss - (self.Ks.transpose().dot(
             np.linalg.inv(self.K))).dot(self.Ks)
-        self.__calculated = 1
+        self._calculated = 1
 
-    def plot(self, nsamples):
-        if (self.__calculated == 0):
+    def plot(self, nsamples, plot_variance=False):
+        if (self._calculated == 0):
             print("No values calculates so far")
             return None
-        elif (self.__calculated == 1):
+        elif (self._calculated == 1):
             yplot = self.calc_samples(nsamples)
-            plt.plot(Xs, yplot, X, self.fun(X), 'ro', Xs, self.fun(Xs), '--')
+            plt.plot(self.X_s, yplot, self.X, self.fun(self.X), 'ro')
+            plt.plot(self.X_s, self.fun(self.X_s), ls='--', color="green",
+                     lw=2)
+            plt.plot(self.X_s, self.mean, ls='-.', color='gray', lw=2.5)
+            if plot_variance:
+                var = np.diagonal(self.cov)
+                # Plot 96% confidence
+                plt.fill_between(self.X_s, self.mean+1.96*var, self.mean-1.96*var,
+                    alpha=0.2, edgecolor='#191919', facecolor='#737373',
+                    linewidth=4, linestyle='dashdot', antialiased=True)
             return(plt.show())
-        elif (self.__calculated == 2):
+        elif (self._calculated == 2):
             yplot = self.calc_samples(nsamples)
             plt.plot(self.X, yplot)
             return(plt.show())
 
-
     def prior_sampling(self):
-        self.mean = np.array(np.repeat(0, dp.size))
+        self.mean = np.array(np.repeat(0, self.X.size))
         self.cov = self._calc_kernel(self.X, self.X)
-        self.__calculated = 2
+        self._calculated = 2
 
 
 if __name__ == '__main__':
     X = np.random.uniform(0, 2, 10)
     fun = lambda x: np.sin(x)**2
     Xs = np.linspace(0, 2, 200)
-    GP = GaussianProcess(Xs, X)
+    GP = GaussianProcess(Xs, X, l=0.1)
     GP.cond_gaussian(fun)
+    GP.plot(10, plot_variance=True)
