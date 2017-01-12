@@ -88,7 +88,7 @@ class GaussianProcess():
             if plot_variance:
                 var = np.diagonal(self.cov)
                 # Plot 96% confidence
-                plt.fill_between(self.X_s, self.mean+1.96*var, self.mean-1.96*var,
+                plt.fill_between(self.X_s, self.mean+1.96*np.var, self.mean-1.96*var,
                     alpha=0.2, edgecolor='#191919', facecolor='#737373',
                     linewidth=4, linestyle='dashdot', antialiased=True)
             return(plt.show())
@@ -104,9 +104,9 @@ class GaussianProcess():
 
 
 if __name__ == '__main__':
-    X = np.random.uniform(0, 2, 10)
+    X = np.random.uniform(0, 2, 4)
     fun = lambda x: np.sin(x)**2
     Xs = np.linspace(0, 2, 200)
-    GP = GaussianProcess(Xs, X, l=0.1)
+    GP = GaussianProcess(Xs, X, l=0.)
     GP.cond_gaussian(fun)
     GP.plot(10, plot_variance=True)
